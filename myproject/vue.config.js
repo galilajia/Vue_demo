@@ -1,0 +1,30 @@
+//在脚手架3中创建vu.config.js文件, 内部写下面的代码
+
+const path = require('path')
+function resolve(dir) {
+  // return path.join(__dirname, '..', dir)
+  return path.join(__dirname, dir)
+}
+// vue.config.js
+module.exports = {
+  configureWebpack: {
+    resolve: {
+      extensions: ['.js', '.vue', '.json'],
+      alias: {
+        vue$: 'vue/dist/vue.esm.js',
+        '@': resolve('src')
+      }
+    }
+  },
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // 目录地址
+        changeOrigin: true, //是否跨域
+        pathRewrite: {
+          '^/api': '' // rewrite path
+        }
+      }
+    }
+  }
+}

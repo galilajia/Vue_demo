@@ -17,6 +17,9 @@ export default {
   name: '',
   components: {
     FooterGuide
+  },
+  mounted() {
+    this.$store.dispatch('getAddress')
   }
 }
 </script>
