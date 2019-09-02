@@ -97,11 +97,15 @@
   </section>
 </template>
 <script>
+import { mapState } from 'vuex'
 export default {
   name: '',
   components: {},
   data() {
     return {}
+  },
+  computed: {
+    ...mapState(['userInfo'])
   }
 }
 </script>

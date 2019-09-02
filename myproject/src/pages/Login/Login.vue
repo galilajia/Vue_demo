@@ -4,16 +4,22 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" class="on">短信登录</a>
-          <a href="javascript:;">密码登录</a>
+          <a href="javascript:;" :class="{on: loginWay}" @click="setLoginWay(true)">短信登录</a>
+          <a href="javascript:;" :class="{on: !loginWay}" @click="setLoginWay(false)">密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div class="on">
+          <div :class="{on: loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号" />
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="tel" maxlength="11" v-model="phone" placeholder="手机号" />
+              <button
+                :disabled="!rightPhone"
+                v-show="!computeTime"
+                @click.prevent="getCode"
+                class="get_verification"
+              >获取验证码</button>
+              <button class="get_verification" v-show="computeTime">{{computeTime}}s</button>
             </section>
             <section class="login_verification">
               <input type="tel" maxlength="8" placeholder="验证码" />
@@ -23,21 +29,26 @@
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div>
+          <div :class="{on: !loginWay}">
             <section>
               <section class="login_message">
                 <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" />
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码" />
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input type="tel" maxlength="8" placeholder="密码" v-if="!showPassword" />
+                <div :class="showPassword?'on':'off'" @click="switchShowPassword">
+                  <div class="switch_circle" :class="{on: showPassword}"></div>
+                  <span class="switch_text" v-show="showPassword">abc</span>
                 </div>
               </section>
               <section class="login_message">
                 <input type="text" maxlength="11" placeholder="验证码" />
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha" />
+                <img
+                  class="get_verification"
+                  src="http://localhost:5000/captcha"
+                  alt="captcha"
+                  @click="changeCaptcha"
+                />
               </section>
             </section>
           </div>
@@ -45,7 +56,7 @@
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
-      <a href="javascript:" class="go_back">
+      <a href="javascript:" class="go_back" @click="$router.back()">
         <i class="iconfont icon-jiantou2"></i>
       </a>
     </div>
@@ -56,7 +67,52 @@ export default {
   name: '',
   components: {},
   data() {
-    return {}
+    return {
+      loginWay: true, // true代表短信登陆, false密码登陆
+      phone: '', //手机号
+      code: '', //短信验证码
+      name: '', //用户名
+      pwd: '', // 密码
+      captcha: '', // 图片验证码
+      computeTime: 0, //计时时间
+      showPassword: false // 是否显示密码
+    }
+  },
+  computed: {
+    rightPhone() {
+      // 以1开头的11数字
+      let reg = new RegExp(/^1\d{10}$/gi)
+      let result = reg.test(this.phone)
+      // console.log(reg.test(this.phone))
+      return result
+    }
+  },
+  methods: {
+    setLoginWay(loginWay) {
+      this.loginWay = loginWay
+    },
+    getCode() {
+      console.log(this.rightPhone)
+      if (this.rightPhone) {
+        // 输入了合法的手机号
+        // 开始倒计时
+        this.computeTime = 10
+        // 启动循环定时器, 每隔1s减少1
+        this.intervalId = setInterval(() => {
+          this.computeTime--
+          //如果到时, 停止计时
+          if (this.computeTime === 0) {
+            clearInterval(this.intervalId)
+          }
+        }, 1000)
+      }
+    },
+    changeCaptcha(event) {
+      event.target.src = 'http://localhost:5000/captcha?time=' + Date.now()
+    },
+    switchShowPassword() {
+      this.showPassword = !this.showPassword
+    }
   }
 }
 </script>

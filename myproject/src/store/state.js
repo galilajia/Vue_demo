@@ -4,4 +4,5 @@ export default {
   address: {}, //地址对象
   categorys: [], //食品信息
   shops: [] //店铺信息
+  // userInfo: {}
 }

@@ -17,4 +17,8 @@ export default {
     const result = await reqShops({ latitude, longitude })
     commit(REQ_SHOPS, { shops: result.data })
   }
+  // async getUsers({ commit, state }) {
+  //   const result = await reqUserinfo()
+  //   commit(REQ_USER_INFO, { userInfo: result.data })
+  // }
 }
