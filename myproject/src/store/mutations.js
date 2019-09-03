@@ -2,7 +2,8 @@ import {
   REQ_ADDRESS,
   REQ_CATEGORYS,
   REQ_SHOPS,
-  REQ_USER_INFO
+  RECEIVE_USER,
+  RESET_USER
 } from './mutation-type'
 
 export default {
@@ -15,9 +16,12 @@ export default {
   },
   [REQ_SHOPS](state, { shops }) {
     state.shops = shops
-  }
+  },
 
-  // [REQ_USER_INFO](state, { userInfo }) {
-  //   state.userInfo = userInfo
-  // }
+  [RECEIVE_USER](state, { user }) {
+    state.user = user
+  },
+  [RESET_USER](state) {
+    state.user = {}
+  }
 }

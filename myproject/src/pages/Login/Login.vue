@@ -12,17 +12,36 @@
         <form>
           <div :class="{on: loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" v-model="phone" placeholder="手机号" />
+              <input
+                type="tel"
+                maxlength="11"
+                v-model="phone"
+                placeholder="手机号"
+                name="phone"
+                v-validate="'required|phone'"
+              />
+              <span
+                style="color: red"
+                v-show="errors.has('phone')"
+                class="help is-danger"
+              >{{errors.first('phone') }}</span>
               <button
                 :disabled="!rightPhone"
-                v-show="!computeTime"
                 @click.prevent="getCode"
                 class="get_verification"
               >获取验证码</button>
-              <button class="get_verification" v-show="computeTime">{{computeTime}}s</button>
+              <!-- <button class="get_verification" v-show="computeTime">{{computeTime}}s</button> -->
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码" />
+              <input
+                type="tel"
+                maxlength="8"
+                placeholder="验证码"
+                v-model="code"
+                name="code"
+                v-validate="'required|code'"
+              />
+              <span style="color: red">{{errors.first('code')}}</span>
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -32,17 +51,42 @@
           <div :class="{on: !loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" />
+                <input
+                  type="tel"
+                  maxlength="11"
+                  placeholder="手机/邮箱/用户名"
+                  v-model="name"
+                  name="name"
+                  v-validate="'required|name'"
+                />
+                <span style="color: red">{{errors.first('name')}}</span>
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码" v-if="!showPassword" />
+                <input
+                  type="tel"
+                  maxlength="8"
+                  placeholder="密码"
+                  v-if="!showPassword"
+                  v-model="pwd"
+                  name="pwd"
+                  v-validate="'required|pwd'"
+                />
+                <span style="color: red">{{errors.first('pwd')}}</span>
                 <div :class="showPassword?'on':'off'" @click="switchShowPassword">
                   <div class="switch_circle" :class="{on: showPassword}"></div>
                   <span class="switch_text" v-show="showPassword">abc</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码" />
+                <input
+                  type="text"
+                  maxlength="11"
+                  placeholder="验证码"
+                  v-model="captcha"
+                  name="captcha"
+                  v-validate="'required|captcha'"
+                />
+                <span style="color: red">{{errors.first('captcha')}}</span>
                 <img
                   class="get_verification"
                   src="http://localhost:5000/captcha"
@@ -52,7 +96,7 @@
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -63,6 +107,7 @@
   </section>
 </template>
 <script>
+import { reqSendCode, reqSmsLogin, reqPwdLogin } from '../../api'
 export default {
   name: '',
   components: {},
@@ -91,21 +136,80 @@ export default {
     setLoginWay(loginWay) {
       this.loginWay = loginWay
     },
-    getCode() {
-      console.log(this.rightPhone)
-      if (this.rightPhone) {
-        // 输入了合法的手机号
-        // 开始倒计时
-        this.computeTime = 10
-        // 启动循环定时器, 每隔1s减少1
-        this.intervalId = setInterval(() => {
-          this.computeTime--
-          //如果到时, 停止计时
-          if (this.computeTime === 0) {
-            clearInterval(this.intervalId)
+    async login() {
+      // 进行前台表单验证, 如果不通过, 提示令牌
+      const { phone, code, name, pwd, captcha, isShowSms, isRightPhone } = this
+      let result
+
+      const validateNames = isShowSms
+        ? ['phone', 'code']
+        : ['name', 'pwd', 'captcha']
+      // 进行整体表单验证
+      const success = await this.$validator.validateAll(validateNames)
+      if (success) {
+        // 验证成功
+        if (isShowSms) {
+          // 如果是短信登陆
+          // 全部通过了, 发短信登陆的请求
+          result = await reqSmsLogin({ phone, code })
+        } else {
+          // 如果是密码登陆
+          // 全部通过了, 密码信登陆的请求
+          result = await reqPwdLogin({ name, pwd, captcha })
+          // 如果失败了, 更新图形验证码
+          if (result.code !== 0) {
+            this.updateCaptcha()
+            this.captcha = ''
           }
-        }, 1000)
+        }
+
+        // 根据结果做相应处理
+        if (result.code === 0) {
+          // 成功了
+          const user = result.data
+          // 保存user(vuex的state中)
+          this.$store.commit(RECEIVE_USER, user) // 查找所有vuex模块中的mutation调用
+          // 跳转到个人中心
+          this.$router.replace('/profile')
+        } else {
+          // 失败了
+          alert(result.msg)
+        }
+      } else {
+        // 验证失败
+        alert('验证失败')
       }
+    },
+
+    async getCode() {
+      // console.log(this.rightPhone)
+      //if (this.rightPhone) {
+      // 输入了合法的手机号
+      // 开始倒计时
+      this.computeTime = 10
+      // 启动循环定时器, 每隔1s减少1
+      this.intervalId = setInterval(() => {
+        this.computeTime--
+        //如果到时, 停止计时
+        if (this.computeTime <= 0) {
+          this.computeTime = 0
+          clearInterval(this.intervalId)
+        }
+      }, 1000)
+      //发送验证码
+      // console.log(this.phone)
+      const result = await reqSendCode(this.phone)
+      console.log(result)
+      // console.log(result)
+      if (result.code === 0) {
+        alert('短信发送成功')
+      } else {
+        this.computeTime = 0
+
+        alert('短信发送失败')
+        clearInterval(this.intervalId)
+      }
+      // }
     },
     changeCaptcha(event) {
       event.target.src = 'http://localhost:5000/captcha?time=' + Date.now()

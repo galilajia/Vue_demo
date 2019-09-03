@@ -2,9 +2,11 @@ import axios from 'axios'
 export default function ajax(url, data = {}, method = 'GET') {
   return new Promise((resolve, reject) => {
     let promise
+
     // 执行异步ajax请求
     if (method === 'GET') {
       promise = axios.get(url, { params: data }) // params配置, 指定的是query参数
+      console.log(promise)
     } else {
       promise = axios.post(url, data)
     }

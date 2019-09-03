@@ -11,7 +11,7 @@ import store from './store'
 Vue.component('Header', Header)
 Vue.component('Star', Star)
 Vue.config.productionTip = false
-
+import './validate'
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

@@ -10,11 +10,18 @@ export const reqCategorys = () => ajax(BASE + '/index_category')
 //根据经纬度获取商铺列表
 export const reqShops = (latitude, longitude) =>
   ajax(BASE + '/shops', { latitude, longitude })
-//获取用户个人信息
+//发送验证码
+export const reqSendCode = phone => ajax(BASE + '/sendcode', { phone })
+// 用户名密码登陆
+export const reqPwdLogin = ({ name, pwd, captcha }) =>
+  ajax(BASE + '/login_pwd', { name, pwd, captcha }, 'POST')
 
-// export const reqUserinfo = () => ajax(BASE + '/userinfo')
+// 手机号验证码登陆
+export const reqSmsLogin = ({ phone, code }) =>
+  ajax(BASE + '/login_sms', { phone, code }, 'POST')
 
-// export const sendCode = () => ajax(BASE + '/login_sms', {}, 'POST')
-// reqAddress('116.36867', '40.10038').then(result => {
-//   console.log(result)
-// })
+// 根据会话获取用户信息
+export const reqUser = () => ajax(BASE + '/userinfo')
+
+// 用户登出
+export const reqLogout = () => ajax(BASE + '/logout')
